@@ -2,3 +2,4 @@ Flask
 flask-cors
 black
 Gunicorn
+openai
