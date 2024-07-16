@@ -33,7 +33,6 @@ export default function CreateExam() {
 
   useEffect(() => {
     if (data && data.questions && isSuccess) {
-      console.log("oioi");
       navigate("/resultados", {
         state: { data: parseQuestions(data.questions) },
       });
