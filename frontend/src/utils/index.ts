@@ -1,32 +1,5 @@
 import type { Sizes } from "../types";
 
-export const parseQuestions = (questionsString: string) => {
-  const questionBlocks = questionsString.trim().split("\n\n");
-
-  return questionBlocks.map((block) => {
-    let question = "";
-    let correctAnswer = "";
-    const options: string[] = [];
-
-    const lines = block.split("\n");
-    lines.forEach((line) => {
-      if (line.match(/^\d/)) {
-        question = line.substring(line.indexOf(" ") + 1);
-      } else if (line.startsWith("Resposta:")) {
-        correctAnswer = line.substring(line.indexOf(":") + 2);
-      } else if (line.trim() !== "") {
-        options.push(line);
-      }
-    });
-
-    return {
-      question,
-      options,
-      correctAnswer,
-    };
-  });
-};
-
 export const classNames = (...classes: any[]): string =>
   classes.filter(Boolean).join(" ");
 
