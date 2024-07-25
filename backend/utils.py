@@ -1,9 +1,9 @@
 def generate_prompt(
     num_questions,
+    primary_instructions,
     question_type,
     subject,
     difficulty,
-    additional_info,
     context_text,
     context_restriction,
 ):
@@ -21,11 +21,22 @@ def generate_prompt(
     if num_questions:
         prompt += f"- Number of questions: {num_questions}\n"
     if difficulty:
-        prompt += f"- Difficulty level: {difficulty}\n"
+        level = "easy" if difficulty == "fácil" else "medium" if difficulty == "médio" else "hard"
 
-    if additional_info:
+        prompt += "Make the questions with a level of difficulty that is " + level + ". Consider the following parameters:\n"
+        if level == "easy":
+            prompt += "- The questions should be straightforward and require basic knowledge.\n"
+            prompt += "- The questions should focus on fundamental concepts and simple facts.\n"
+        elif level == "medium":
+            prompt += "- The questions should require a moderate level of reasoning and understanding.\n"
+            prompt += "- The questions should integrate multiple concepts and require some analysis.\n"
+        elif level == "hard":
+            prompt += "- The questions should require deep understanding and advanced reasoning.\n"
+            prompt += "- The questions should involve complex problem-solving and critical thinking.\n"
+
+    if primary_instructions:
         prompt += "Prioritize user instructions over the predefined parameters.\n"
-        prompt += f"\nUser instructions:\n{additional_info}\n"
+        prompt += f"\nUser instructions:\n{primary_instructions}\n"
 
     prompt += "Add the answers key and correction instructions to the end.\n"
     prompt += "The output must be in markdown format, divided into the following optional sections: subject, instructions for solving the questions, questions, answer keys (contains the complete answer for the questions), correction instructions (for example, if the question type is essay, highlight important topics in detail to help the teacher make an objective correction), and alerts."
@@ -42,7 +53,159 @@ def generate_prompt(
     return prompt
 
 
-def generate_exam(client, prompt):
+def generate_exam(client, prompt, question_type):
+    functions = [
+        {
+            "name": "structure_multiple_choice_exam",
+            "description": "Structure the output of the exam generated.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "subject": {
+                        "type": "string",
+                        "description": "The subject of the exam.",
+                    },
+                    "instructions": {
+                        "type": "array",
+                        "description": "Instructions for solving the questions.",
+                        "items": {"type": "string"},
+                    },
+                    "questions": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "question_number": {
+                                    "type": "integer",
+                                    "description": "The number of the question.",
+                                },
+                                "question": {
+                                    "type": "string",
+                                    "description": "The question to be answered.",
+                                },
+                                "options": {
+                                    "type": "array",
+                                    "description": "The options for the question.",
+                                    "items": {"type": "string"},
+                                },
+                            },
+                        },
+                    },
+                    "answers": {
+                        "type": "array",
+                        "description": "The answers for the questions.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "question_number": {
+                                    "type": "integer",
+                                    "description": "The number of the question.",
+                                },
+                                "answer": {
+                                    "type": "string",
+                                    "description": "The answer for the question.",
+                                },
+                            },
+                        },
+                    },
+                    "correction_instructions": {
+                        "type": "array",
+                        "description": "Instructions for correcting the exam.",
+                        "items": {"type": "string"},
+                    },
+                    "alerts": {
+                        "type": "array",
+                        "description": "Alerts for the exam.",
+                        "items": {"type": "string"},
+                    },
+                },
+                "required": [
+                    "subject",
+                    "instructions",
+                    "questions",
+                    "answers",
+                    "correction_instructions",
+                    "alerts",
+                ],
+            },
+        },
+        {
+            "name": "structure_open_ended_exam",
+            "description": "Structure the output of the exam generated.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "subject": {
+                        "type": "string",
+                        "description": "The subject of the exam.",
+                    },
+                    "instructions": {
+                        "type": "array",
+                        "description": "Instructions for solving the questions.",
+                        "items": {"type": "string"},
+                    },
+                    "questions": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "question_number": {
+                                    "type": "integer",
+                                    "description": "The number of the question.",
+                                },
+                                "question": {
+                                    "type": "string",
+                                    "description": "The question to be answered.",
+                                },
+                            },
+                        },
+                    },
+                    "answers": {
+                        "type": "array",
+                        "description": "The answers for the questions.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "question_number": {
+                                    "type": "integer",
+                                    "description": "The number of the question.",
+                                },
+                                "answer": {
+                                    "type": "string",
+                                    "description": "The answer for the question.",
+                                },
+                            },
+                        },
+                    },
+                    "correction_instructions": {
+                        "type": "array",
+                        "description": "Instructions for correcting the exam.",
+                        "items": {"type": "string"},
+                    },
+                    "alerts": {
+                        "type": "array",
+                        "description": "Alerts for the exam.",
+                        "items": {"type": "string"},
+                    },
+                },
+                "required": [
+                    "subject",
+                    "instructions",
+                    "questions",
+                    "answers",
+                    "correction_instructions",
+                    "alerts",
+                ],
+            },
+        },
+    ]
+
+    chosen_function = (
+        "structure_multiple_choice_exam"
+        if question_type == "múltipla escolha"
+        else "structure_open_ended_exam"
+    )
+
     response = client.chat.completions.create(
         messages=[
             {
@@ -51,6 +214,9 @@ def generate_exam(client, prompt):
             },
             {"role": "user", "content": prompt},
         ],
-        model="gpt-3.5-turbo",
+        model="gpt-4o",
+        functions=functions,
+        function_call={"name": chosen_function},
     )
-    return response.choices[0].message.content
+
+    return response.choices[0].message.function_call.arguments
