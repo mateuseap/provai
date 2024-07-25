@@ -53,7 +53,9 @@ const ExamRenderer = ({
         {correction_instructions.map((correction_instruction) => (
           <li className="my-1">{correction_instruction}</li>
         ))}
-        {correction_instructions.length === 0 && <li>Nenhuma instrução para correção.</li>}
+        {correction_instructions.length === 0 && (
+          <li>Nenhuma instrução para correção.</li>
+        )}
       </div>
       <h2 className="text-xl font-semibold mt-6 mb-4">Alertas:</h2>
       <div className="ml-2">

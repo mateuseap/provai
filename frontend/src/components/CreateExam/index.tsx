@@ -38,7 +38,9 @@ export default function CreateExam() {
         data: {
           api_key: apiKey,
           number_of_questions: numberOfQuestions,
-          primary_instructions: primaryInstructions ? primaryInstructions : null,
+          primary_instructions: primaryInstructions
+            ? primaryInstructions
+            : null,
           questions_type: questionsType,
           subject,
           difficulty,
@@ -277,7 +279,11 @@ export default function CreateExam() {
                 )}
               </div>
             </div>
-            <div className={`flex flex-row w-full items-center ${context ? "justify-between gap-x-16" : "justify-center"}`}>
+            <div
+              className={`flex flex-row w-full items-center ${
+                context ? "justify-between gap-x-16" : "justify-center"
+              }`}
+            >
               {context && (
                 <div className="flex items-center justify-center">
                   <input
