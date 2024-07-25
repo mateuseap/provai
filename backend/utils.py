@@ -21,9 +21,17 @@ def generate_prompt(
     if num_questions:
         prompt += f"- Number of questions: {num_questions}\n"
     if difficulty:
-        level = "easy" if difficulty == "fácil" else "medium" if difficulty == "médio" else "hard"
+        level = (
+            "easy"
+            if difficulty == "fácil"
+            else "medium" if difficulty == "médio" else "hard"
+        )
 
-        prompt += "Make the questions with a level of difficulty that is " + level + ". Consider the following parameters:\n"
+        prompt += (
+            "Make the questions with a level of difficulty that is "
+            + level
+            + ". Consider the following parameters:\n"
+        )
         if level == "easy":
             prompt += "- The questions should be straightforward and require basic knowledge.\n"
             prompt += "- The questions should focus on fundamental concepts and simple facts.\n"
