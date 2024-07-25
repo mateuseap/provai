@@ -34,10 +34,11 @@ def receive_data():
         context_file,
         context_restriction,
     )
-    exam = generate_exam(client, prompt, question_type)
-    exam = json.loads(exam)
 
     try:
+        exam = generate_exam(client, prompt, question_type)
+        exam = json.loads(exam)
+
         return jsonify({"message": "Exam generated successfully!", "exam": exam})
     except ValueError as ve:
         return jsonify({"error": str(ve)}), 500
