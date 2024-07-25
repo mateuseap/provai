@@ -1,8 +1,10 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon } from "@heroicons/react/24/solid";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import Spinner from "../Spinner";
+import { Tooltip as ReactTooltip } from "react-tooltip";
 
 export default function CreateExam() {
   const [apiKey, setApiKey] = useState("");
@@ -11,7 +13,7 @@ export default function CreateExam() {
   const [questionsType, setQuestionsType] = useState("múltipla escolha");
   const [difficulty, setDifficulty] = useState("médio");
   const [subject, setSubject] = useState("");
-  const [additionalInformation, setAdditionalInformation] = useState("");
+  const [primaryInstructions, setPrimaryInstructions] = useState("");
   const [contextRestriction, setContextRestriction] = useState(false);
   const [context, setContext] = useState<string | null>(null);
   const [contextError, setContextError] = useState(false);
@@ -36,10 +38,10 @@ export default function CreateExam() {
         data: {
           api_key: apiKey,
           number_of_questions: numberOfQuestions,
+          primary_instructions: primaryInstructions ? primaryInstructions : null,
           questions_type: questionsType,
           subject,
           difficulty,
-          additional_information: additionalInformation,
           context_restriction: contextRestriction,
           context: context ? context : null,
         },
@@ -54,9 +56,6 @@ export default function CreateExam() {
       !apiKey ||
       numberOfQuestions < 1 ||
       numberOfQuestions > 10 ||
-      !questionsType ||
-      !subject ||
-      !additionalInformation ||
       (contextRestriction && !context)
     ) {
       return;
@@ -162,6 +161,30 @@ export default function CreateExam() {
                 </span>
               </div>
               <div className="w-full max-w-md mb-4">
+                <label
+                  htmlFor="primaryInstructions"
+                  className="block mb-2 text-lg flex items-center"
+                >
+                  Instruções principais
+                  <InformationCircleIcon
+                    className="h-4 w-4 text-white ml-1"
+                    data-tooltip-id="primary-instructions"
+                    data-tooltip-content="Essas instruções serão as mais priorizadas na hora da geração da sua prova"
+                  />
+                  <ReactTooltip id="primary-instructions" />
+                </label>
+                <textarea
+                  id="primaryInstructions"
+                  value={primaryInstructions}
+                  placeholder="Descreva o que você deseja que seja considerado na hora de gerar a prova (ex: será uma prova para alunos do 9º ano, tempo de duração, etc)"
+                  onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                    setPrimaryInstructions(e.target.value)
+                  }
+                  className="w-full p-3 rounded-lg text-black border-2 border-gray-300 resize-none"
+                  rows={4}
+                />
+              </div>
+              <div className="w-full max-w-md mb-4">
                 <label htmlFor="questionsType" className="block mb-2 text-lg">
                   Tipo de questões
                 </label>
@@ -209,31 +232,19 @@ export default function CreateExam() {
                   <option value="difícil">Difícil</option>
                 </select>
               </div>
-              <div className="w-full max-w-md mb-4">
-                <label
-                  htmlFor="additionalInformation"
-                  className="block mb-2 text-lg"
-                >
-                  Informações adicionais
-                </label>
-                <textarea
-                  id="additionalInformation"
-                  value={additionalInformation}
-                  placeholder="Insira informações adicionais sobre o que deseja na prova"
-                  onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
-                    setAdditionalInformation(e.target.value)
-                  }
-                  className="w-full p-3 rounded-lg text-black border-2 border-gray-300 resize-none"
-                  rows={4}
-                />
-              </div>
             </div>
             <div className="mb-10">
               <label
                 htmlFor="contextFile"
-                className="block mb-2 text-lg text-center"
+                className="block mb-2 text-lg text-center flex items-center"
               >
                 Contexto (.txt)
+                <InformationCircleIcon
+                  className="h-4 w-4 text-white ml-1"
+                  data-tooltip-id="context-file"
+                  data-tooltip-content="O conteúdo desse arquivo .txt será utilizado pela IA como base para a geração da prova"
+                />
+                <ReactTooltip id="context-file" />
               </label>
               <div className="flex flex-col justify-center items-center gap-y-4">
                 <label
@@ -266,16 +277,26 @@ export default function CreateExam() {
                 )}
               </div>
             </div>
-            <div className="flex flex-row w-full items-center justify-between">
-              <div className="flex items-center justify-center">
-                <input
-                  type="checkbox"
-                  checked={contextRestriction}
-                  onChange={() => setContextRestriction(!contextRestriction)}
-                  className="mr-2"
-                />
-                <h2>Restrição de contexto</h2>
-              </div>
+            <div className={`flex flex-row w-full items-center ${context ? "justify-between gap-x-16" : "justify-center"}`}>
+              {context && (
+                <div className="flex items-center justify-center">
+                  <input
+                    type="checkbox"
+                    checked={contextRestriction}
+                    onChange={() => setContextRestriction(!contextRestriction)}
+                    className="mr-2"
+                  />
+                  <p className="flex gap-x-1 items-center">
+                    <h2>Restrição de contexto </h2>
+                    <InformationCircleIcon
+                      className="h-4 w-4 text-white ml-1"
+                      data-tooltip-id="context-restriction"
+                      data-tooltip-content="Caso marque essa opção, a IA irá gerar a prova estritamente com base no conteúdo do arquivo de contexto fornecido"
+                    />
+                    <ReactTooltip id="context-restriction" />
+                  </p>
+                </div>
+              )}
               <button
                 className="px-6 py-4 bg-secondary text-black rounded-lg border-2 border-black border-solid"
                 onClick={handleGenerateExam}
